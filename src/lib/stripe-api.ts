@@ -5,7 +5,7 @@
  * (webhooks, redirects) are naturally REST-based.
  */
 
-const API_URL = 'https://afterzin.com/api/v1';
+const API_URL = 'https://api.afterzin.com/v1';
 
 async function fetchWithAuth(path: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
@@ -29,12 +29,12 @@ async function fetchWithAuth(path: string, options: RequestInit = {}) {
 
 /** Creates a Stripe Connect Express account for the current producer. */
 export async function createStripeAccount(): Promise<{ accountId: string; message: string }> {
-  return fetchWithAuth('/stripe/connect/create-account', { method: 'POST' });
+  return fetchWithAuth('/connect/create-account', { method: 'POST' });
 }
 
 /** Creates an onboarding link — redirects producer to Stripe's hosted onboarding. */
 export async function createOnboardingLink(): Promise<{ url: string }> {
-  return fetchWithAuth('/stripe/connect/onboarding-link', { method: 'POST' });
+  return fetchWithAuth('/connect/onboarding-link', { method: 'POST' });
 }
 
 /** Gets the current Stripe Connect onboarding status. */
@@ -47,7 +47,7 @@ export async function getStripeStatus(): Promise<{
   payoutsEnabled?: boolean;
   error?: string;
 }> {
-  return fetchWithAuth('/stripe/connect/status');
+  return fetchWithAuth('/connect/status');
 }
 
 /** Updates the producer's PIX key. All events must be paused first. */
@@ -55,7 +55,7 @@ export async function updatePixKey(
   pixKey: string,
   pixKeyType: string,
 ): Promise<{ message: string }> {
-  return fetchWithAuth('/stripe/connect/pix-key', {
+  return fetchWithAuth('/connect/pix-key', {
     method: 'POST',
     body: JSON.stringify({ pixKey, pixKeyType }),
   });
@@ -77,7 +77,7 @@ export interface PixPaymentResult {
 export async function createPixPayment(
   orderId: string,
 ): Promise<PixPaymentResult> {
-  return fetchWithAuth('/stripe/payment/create', {
+  return fetchWithAuth('/payment/create', {
     method: 'POST',
     body: JSON.stringify({ orderId }),
   });
@@ -87,5 +87,5 @@ export async function createPixPayment(
 export async function getPaymentStatus(
   orderId: string,
 ): Promise<{ status: string; paid: boolean; paymentIntentId?: string; orderStatus?: string }> {
-  return fetchWithAuth(`/stripe/payment/status?orderId=${encodeURIComponent(orderId)}`);
+  return fetchWithAuth(`/payment/status?orderId=${encodeURIComponent(orderId)}`);
 }

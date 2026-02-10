@@ -5,7 +5,7 @@
  * (webhooks, PIX flow) are naturally REST-based.
  */
 
-const API_URL = 'https://afterzin.com/api/v1';
+const API_URL = 'https://api.afterzin.com/v1';
 
 async function fetchWithAuth(path: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
@@ -44,7 +44,7 @@ export interface CreateRecipientRequest {
 export async function createRecipient(
   data: CreateRecipientRequest,
 ): Promise<{ recipientId: string; status: string; message: string }> {
-  return fetchWithAuth('/pagarme/recipient/create', {
+  return fetchWithAuth('/recipient/create', {
     method: 'POST',
     body: JSON.stringify(data),
   });
@@ -59,7 +59,7 @@ export async function getRecipientStatus(): Promise<{
   name?: string;
   error?: string;
 }> {
-  return fetchWithAuth('/pagarme/recipient/status');
+  return fetchWithAuth('/recipient/status');
 }
 
 // ---------- Payment: PIX ----------
@@ -78,7 +78,7 @@ export interface PixPaymentResult {
 export async function createPixPayment(
   orderId: string,
 ): Promise<PixPaymentResult> {
-  return fetchWithAuth('/pagarme/payment/create', {
+  return fetchWithAuth('/payment/create', {
     method: 'POST',
     body: JSON.stringify({ orderId }),
   });
@@ -88,5 +88,5 @@ export async function createPixPayment(
 export async function getPaymentStatus(
   orderId: string,
 ): Promise<{ status: string; paid: boolean; pagarmeOrderId?: string; orderStatus?: string }> {
-  return fetchWithAuth(`/pagarme/payment/status?orderId=${encodeURIComponent(orderId)}`);
+  return fetchWithAuth(`/payment/status?orderId=${encodeURIComponent(orderId)}`);
 }
