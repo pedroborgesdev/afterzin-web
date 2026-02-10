@@ -12,7 +12,7 @@ interface LayoutProps {
 
 export function Layout({ children, searchQuery, onSearchChange, onSearchSubmit }: LayoutProps) {
   return (
-    <div className="min-h-[100dvh] bg-gradient-hero flex flex-col relative [transform:translateZ(0)]">
+    <div className="min-h-[100dvh] bg-gradient-hero flex flex-col relative">
       <EventsBackground />
       <Header searchQuery={searchQuery} onSearchChange={onSearchChange} onSearchSubmit={onSearchSubmit} />
       <main className="flex-1 pb-6 md:pb-12 relative z-10">
