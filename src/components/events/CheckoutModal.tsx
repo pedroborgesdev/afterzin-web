@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { createPixPayment, getPaymentStatus, type PixPaymentResult } from '@/lib/pagarme-api';
+import { UpdatePhoneModal } from '@/components/auth/UpdatePhoneModal';
 import {
   Dialog,
   DialogContent,
@@ -49,7 +50,8 @@ export function CheckoutModal({
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'loading' | 'pix' | 'success' | 'error'>('idle');
   const [pixData, setPixData] = useState<PixPaymentResult | null>(null);
   const [timeLeft, setTimeLeft] = useState<string>('');
-  const { refreshTickets } = useAuth();
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const { user, refreshTickets } = useAuth();
   const { toast } = useToast();
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -109,15 +111,24 @@ export function CheckoutModal({
    * Inicia o fluxo de pagamento via PIX (único método permitido).
    *
    * Validações realizadas:
+   * - Usuário deve ter telefone cadastrado (obrigatório para gateway)
    * - checkoutId não pode estar vazio
    * - Resposta do servidor deve conter QR code válido
    *
    * Fluxo:
-   * 1. Cria pagamento PIX no backend
-   * 2. Exibe QR code para o usuário
-   * 3. Inicia polling para detectar confirmação de pagamento
+   * 1. Verifica se usuário tem telefone cadastrado
+   * 2. Cria pagamento PIX no backend
+   * 3. Exibe QR code para o usuário
+   * 4. Inicia polling para detectar confirmação de pagamento
    */
   const handlePay = async () => {
+    // Verificar se usuário tem telefone cadastrado
+    const hasPhone = user?.phoneAreaCode && user?.phoneNumber;
+    if (!hasPhone) {
+      setShowPhoneModal(true);
+      return;
+    }
+
     // Validar checkoutId
     if (!checkoutId || checkoutId.trim() === '') {
       toast({
@@ -308,36 +319,58 @@ export function CheckoutModal({
 
   if (isMobile) {
     return (
-      <Drawer open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-        <DrawerContent className="max-h-[92vh]">
-          <DrawerHeader className="border-b border-border px-4 pb-3">
-            <div className="flex items-center justify-between">
-              <DrawerTitle className="font-display text-xl">
-              {paymentStatus === 'success' ? 'Pagamento Confirmado!' : paymentStatus === 'pix' ? 'Pagar com PIX' : 'Finalizar Compra'}
-            </DrawerTitle>
-              <DrawerClose asChild>
-                <button className="p-2 hover:bg-accent rounded-lg transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </DrawerClose>
-            </div>
-          </DrawerHeader>
-          {content}
-        </DrawerContent>
-      </Drawer>
+      <>
+        <Drawer open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+          <DrawerContent className="max-h-[92vh]">
+            <DrawerHeader className="border-b border-border px-4 pb-3">
+              <div className="flex items-center justify-between">
+                <DrawerTitle className="font-display text-xl">
+                {paymentStatus === 'success' ? 'Pagamento Confirmado!' : paymentStatus === 'pix' ? 'Pagar com PIX' : 'Finalizar Compra'}
+              </DrawerTitle>
+                <DrawerClose asChild>
+                  <button className="p-2 hover:bg-accent rounded-lg transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </DrawerClose>
+              </div>
+            </DrawerHeader>
+            {content}
+          </DrawerContent>
+        </Drawer>
+
+        <UpdatePhoneModal
+          isOpen={showPhoneModal}
+          onClose={() => setShowPhoneModal(false)}
+          onSuccess={() => {
+            setShowPhoneModal(false);
+            handlePay();
+          }}
+        />
+      </>
     );
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-sm p-0 gap-0">
-        <DialogHeader className="p-4 sm:p-6 pb-4">
-          <DialogTitle className="font-display text-xl">
-            {paymentStatus === 'success' ? 'Pagamento Confirmado!' : paymentStatus === 'pix' ? 'Pagar com PIX' : 'Finalizar Compra'}
-          </DialogTitle>
-        </DialogHeader>
-        {content}
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+        <DialogContent className="max-w-sm p-0 gap-0">
+          <DialogHeader className="p-4 sm:p-6 pb-4">
+            <DialogTitle className="font-display text-xl">
+              {paymentStatus === 'success' ? 'Pagamento Confirmado!' : paymentStatus === 'pix' ? 'Pagar com PIX' : 'Finalizar Compra'}
+            </DialogTitle>
+          </DialogHeader>
+          {content}
+        </DialogContent>
+      </Dialog>
+
+      <UpdatePhoneModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onSuccess={() => {
+          setShowPhoneModal(false);
+          handlePay();
+        }}
+      />
+    </>
   );
 }

@@ -7,6 +7,9 @@ export const FRAGMENT_USER = gql`
     email
     cpf
     birthDate
+    phoneCountryCode
+    phoneAreaCode
+    phoneNumber
     photoUrl
     role
     createdAt
@@ -183,6 +186,23 @@ export const MUTATION_UPDATE_PROFILE_PHOTO = gql`
       id
       name
       photoUrl
+    }
+  }
+`;
+
+export const MUTATION_UPDATE_PHONE = gql`
+  ${FRAGMENT_USER}
+  mutation UpdatePhone(
+    $phoneCountryCode: String!
+    $phoneAreaCode: String!
+    $phoneNumber: String!
+  ) {
+    updatePhone(
+      phoneCountryCode: $phoneCountryCode
+      phoneAreaCode: $phoneAreaCode
+      phoneNumber: $phoneNumber
+    ) {
+      ...UserFields
     }
   }
 `;

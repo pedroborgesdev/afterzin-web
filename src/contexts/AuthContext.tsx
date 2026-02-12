@@ -3,9 +3,11 @@ import { graphqlClient, setToken, getToken } from '@/lib/graphql';
 import {
   MUTATION_LOGIN,
   MUTATION_REGISTER,
+  MUTATION_UPDATE_PHONE,
   QUERY_ME,
   QUERY_MY_TICKETS,
 } from '@/lib/graphql-operations';
+import { sanitizePhone, validatePhone } from '@/lib/phone-utils';
 
 interface User {
   id: string;
@@ -13,6 +15,9 @@ interface User {
   email: string;
   cpf: string;
   birthDate: string;
+  phoneCountryCode?: string;
+  phoneAreaCode?: string;
+  phoneNumber?: string;
   avatar?: string;
   photoUrl?: string;
 }
@@ -38,9 +43,10 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (data: Omit<User, 'id'> & { password: string }) => Promise<{ success: boolean; error?: string }>;
+  register: (data: Omit<User, 'id'> & { password: string; phoneCountryCode: string; phoneAreaCode: string; phoneNumber: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
+  updatePhone: (phoneCountryCode: string, phoneAreaCode: string, phoneNumber: string) => Promise<{ success: boolean; error?: string }>;
   addTicket: (ticket: Omit<Ticket, 'id' | 'holderName' | 'holderCpf' | 'purchaseDate'>) => void;
   refreshTickets: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -48,13 +54,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function mapApiUser(u: { id: string; name: string; email: string; cpf: string; birthDate: string; photoUrl?: string | null }): User {
+function mapApiUser(u: {
+  id: string;
+  name: string;
+  email: string;
+  cpf: string;
+  birthDate: string;
+  phoneCountryCode?: string | null;
+  phoneAreaCode?: string | null;
+  phoneNumber?: string | null;
+  photoUrl?: string | null;
+}): User {
   return {
     id: u.id,
     name: u.name,
     email: u.email,
     cpf: u.cpf,
     birthDate: u.birthDate,
+    phoneCountryCode: u.phoneCountryCode ?? undefined,
+    phoneAreaCode: u.phoneAreaCode ?? undefined,
+    phoneNumber: u.phoneNumber ?? undefined,
     avatar: u.photoUrl ?? undefined,
     photoUrl: u.photoUrl ?? undefined,
   };
@@ -122,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     if (!getToken()) return;
     try {
-      const data = await graphqlClient.request<{ me: { id: string; name: string; email: string; cpf: string; birthDate: string; photoUrl?: string | null } | null }>(QUERY_ME);
+      const data = await graphqlClient.request<{ me: Parameters<typeof mapApiUser>[0] | null }>(QUERY_ME);
       if (data?.me) setUser(mapApiUser(data.me));
     } catch {
       // ignore
@@ -137,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     (async () => {
       try {
-        const data = await graphqlClient.request<{ me: { id: string; name: string; email: string; cpf: string; birthDate: string; photoUrl?: string | null } | null }>(QUERY_ME);
+        const data = await graphqlClient.request<{ me: Parameters<typeof mapApiUser>[0] | null }>(QUERY_ME);
         if (data?.me) {
           setUser(mapApiUser(data.me));
           await refreshTickets();
@@ -169,12 +188,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
-  const register = async (data: Omit<User, 'id'> & { password: string }): Promise<{ success: boolean; error?: string }> => {
+  const register = async (data: Omit<User, 'id'> & { password: string; phoneCountryCode: string; phoneAreaCode: string; phoneNumber: string }): Promise<{ success: boolean; error?: string }> => {
     // Sanitizar e validar CPF antes de enviar
     const sanitizedCPF = sanitizeCPF(data.cpf);
 
     if (!validateCPF(sanitizedCPF)) {
       return { success: false, error: 'CPF inválido: deve conter 11 dígitos.' };
+    }
+
+    // Validar telefone
+    const phoneValidation = validatePhone(
+      data.phoneCountryCode,
+      data.phoneAreaCode,
+      data.phoneNumber
+    );
+    if (!phoneValidation.valid) {
+      return { success: false, error: phoneValidation.error };
     }
 
     try {
@@ -183,8 +212,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: data.name,
           email: data.email,
           password: data.password,
-          cpf: sanitizedCPF, // Enviar CPF limpo (sem formatação)
+          cpf: sanitizedCPF,
           birthDate: data.birthDate,
+          phoneCountryCode: data.phoneCountryCode,
+          phoneAreaCode: data.phoneAreaCode,
+          phoneNumber: sanitizePhone(data.phoneNumber),
         },
       });
       if (res?.register?.token) {
@@ -210,6 +242,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateProfile = (data: Partial<User>) => {
     if (user) setUser({ ...user, ...data });
+  };
+
+  const updatePhone = async (
+    phoneCountryCode: string,
+    phoneAreaCode: string,
+    phoneNumber: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    // Validar telefone
+    const phoneValidation = validatePhone(phoneCountryCode, phoneAreaCode, phoneNumber);
+    if (!phoneValidation.valid) {
+      return { success: false, error: phoneValidation.error };
+    }
+
+    try {
+      const res = await graphqlClient.request<{ updatePhone: Parameters<typeof mapApiUser>[0] }>(
+        MUTATION_UPDATE_PHONE,
+        {
+          phoneCountryCode,
+          phoneAreaCode,
+          phoneNumber: sanitizePhone(phoneNumber),
+        }
+      );
+      if (res?.updatePhone) {
+        setUser(mapApiUser(res.updatePhone));
+        return { success: true };
+      }
+    } catch (err: any) {
+      return { success: false, error: 'Erro ao atualizar telefone.' };
+    }
+    return { success: false, error: 'Erro ao atualizar telefone.' };
   };
 
   const addTicket = (ticketData: Omit<Ticket, 'id' | 'holderName' | 'holderCpf' | 'purchaseDate'>) => {
@@ -238,6 +300,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         updateProfile,
+        updatePhone,
         addTicket,
         refreshTickets,
         refreshUser,

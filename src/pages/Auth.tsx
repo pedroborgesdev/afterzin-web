@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, Lock, User, Calendar, CreditCard, ArrowLeft, Eye, EyeOff, Ticket, Sparkles, Shield } from 'lucide-react';
+import { Mail, Lock, User, Calendar, CreditCard, ArrowLeft, Eye, EyeOff, Ticket, Sparkles, Shield, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { sanitizePhone, formatPhoneNumber } from '@/lib/phone-utils';
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -25,6 +26,9 @@ export default function Auth() {
   const [name, setName] = useState('');
   const [cpf, setCpf] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [phoneCountryCode, setPhoneCountryCode] = useState('55');
+  const [phoneAreaCode, setPhoneAreaCode] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   const redirectUrl = searchParams.get('redirect') || '/';
 
@@ -47,6 +51,11 @@ export default function Auth() {
     if (numbers.length <= 2) return numbers;
     if (numbers.length <= 4) return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
     return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+  };
+
+  const formatBirthDateForBackend = (date: string) => {
+    const [day, month, year] = date.split('/');
+    return `${year}-${month}-${day}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,8 +83,11 @@ export default function Auth() {
           name,
           email,
           cpf,
-          birthDate,
+          birthDate: formatBirthDateForBackend(birthDate),
           password,
+          phoneCountryCode,
+          phoneAreaCode,
+          phoneNumber,
         });
         if (result.success) {
           toast({
@@ -211,6 +223,53 @@ export default function Auth() {
                         />
                       </div>
                     </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="phone" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Telefone
+                    </Label>
+                    <div className="flex gap-2">
+                      <div className="relative w-20">
+                        <Input
+                          id="phoneCountryCode"
+                          type="text"
+                          placeholder="+55"
+                          className="h-11 rounded-xl border-input hover:border-primary focus:border-primary ring-0 ring-primary/20 focus:ring-2 transition-[box-shadow,border-color] duration-300 text-center text-sm placeholder:text-muted-foreground/40"
+                          value={`+${phoneCountryCode}`}
+                          onChange={(e) => setPhoneCountryCode(sanitizePhone(e.target.value))}
+                          maxLength={4}
+                        />
+                      </div>
+                      <div className="relative w-20">
+                        <Input
+                          id="phoneAreaCode"
+                          type="text"
+                          placeholder="11"
+                          className="h-11 rounded-xl border-input hover:border-primary focus:border-primary ring-0 ring-primary/20 focus:ring-2 transition-[box-shadow,border-color] duration-300 text-center font-mono text-sm placeholder:text-muted-foreground/40"
+                          value={phoneAreaCode}
+                          onChange={(e) => setPhoneAreaCode(sanitizePhone(e.target.value))}
+                          maxLength={2}
+                          required
+                        />
+                      </div>
+                      <div className="relative flex-1">
+                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
+                        <Input
+                          id="phoneNumber"
+                          type="text"
+                          placeholder="99999-9999"
+                          className="pl-11 h-11 rounded-xl border-input hover:border-primary focus:border-primary ring-0 ring-primary/20 focus:ring-2 transition-[box-shadow,border-color] duration-300 font-mono text-sm placeholder:text-muted-foreground/40"
+                          value={formatPhoneNumber(phoneNumber)}
+                          onChange={(e) => setPhoneNumber(sanitizePhone(e.target.value))}
+                          maxLength={10}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground/60 mt-1">
+                      Exemplo: +55 11 99999-9999
+                    </p>
                   </div>
                 </>
               )}
