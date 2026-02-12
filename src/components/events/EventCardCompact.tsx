@@ -46,7 +46,6 @@ export function EventCardCompact({ event, showNew = false }: EventCardCompactPro
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
 
           {/* Status Badge */}
           <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 flex gap-1.5">

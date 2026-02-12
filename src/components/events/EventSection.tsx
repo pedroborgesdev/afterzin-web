@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback, type ReactNode, Children } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect, useCallback, type ReactNode, Children } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -109,22 +109,26 @@ export function EventSection({ title, subtitle, icon, children, horizontal = fal
     }
   }, [shouldBeInfinite, childrenArray.length, endCard]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!horizontal) return;
     const el = scrollRef.current;
     if (!el) return;
 
-    // Aguardar renderização dos elementos
-    const initializeScroll = () => {
-      // Sempre começar no primeiro card (posição 0)
+    // Corrigir scroll inicial para o início da lista original no modo infinito
+    if (shouldBeInfinite && childrenArray.length > 0) {
+      const cardWidth = el.querySelector(':scope > *')?.clientWidth ?? 280;
+      const gap = 16;
+      const itemWidth = cardWidth + gap;
+      // O início da lista original é após as repetições anteriores
+      const reps = getRepetitionCount(childrenArray.length);
+      // Se houver repetições antes, posicione o scroll no início da lista original
       el.scrollLeft = 0;
-    };
-
-    // Usar setTimeout para garantir que os elementos foram renderizados
-    const timer = setTimeout(initializeScroll, 0);
+    } else {
+      el.scrollLeft = 0;
+    }
 
     updateScrollState();
-    
+
     const handleScroll = () => {
       updateScrollState();
       handleInfiniteScroll();
@@ -133,9 +137,8 @@ export function EventSection({ title, subtitle, icon, children, horizontal = fal
     el.addEventListener('scroll', handleScroll, { passive: true });
     const ro = new ResizeObserver(updateScrollState);
     ro.observe(el);
-    
+
     return () => {
-      clearTimeout(timer);
       el.removeEventListener('scroll', handleScroll);
       ro.disconnect();
     };

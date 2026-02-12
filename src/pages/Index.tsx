@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ArrowLeft, Search, Flame, CalendarClock, Sparkles } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { FeaturedCarousel } from '@/components/events/FeaturedCarousel';
 import { CategoryFilter } from '@/components/events/CategoryFilter';
 import { EventCard } from '@/components/events/EventCard';
 import { EventCardCompact } from '@/components/events/EventCardCompact';
+import { EventCardCompactPlaceholder } from '@/components/events/EventCardCompactPlaceholder';
 import { EventSection } from '@/components/events/EventSection';
 import { EventEndCard } from '@/components/events/EventEndCard';
 import { ProducerCTA } from '@/components/events/ProducerCTA';
@@ -21,6 +22,17 @@ const Index = () => {
 
   const { events, isLoading, error } = useEvents(selectedCategory);
   const { featured, trending, upcoming, recent, all } = useHomeEvents(events);
+
+  // Delay para exibir placeholders por 1 segundo
+  const [showPlaceholders, setShowPlaceholders] = useState(true);
+  useEffect(() => {
+    if (!isLoading) {
+      const timer = setTimeout(() => setShowPlaceholders(false), 100);
+      return () => clearTimeout(timer);
+    } else {
+      setShowPlaceholders(true);
+    }
+  }, [isLoading]);
 
   // Scroll para seção de todos os eventos
   const scrollToAllEvents = useCallback(() => {
@@ -147,55 +159,61 @@ const Index = () => {
           </section>
 
           {/* 🔥 Eventos em Alta */}
-          {!isLoading && trending.length > 0 && (
-            <EventSection
-              title="Eventos em Alta"
-              subtitle="Os mais procurados agora"
-              icon={<Flame className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />}
-              horizontal
-              infinite
-              endCard={<EventEndCard onViewAll={scrollToAllEvents} />}
-              className="mb-6 sm:mb-8"
-            >
-              {trending.map((event) => (
-                <EventCardCompact key={event.id} event={event} />
-              ))}
-            </EventSection>
-          )}
+          <EventSection
+            title="Eventos em Alta"
+            subtitle="Os mais procurados agora"
+            icon={<Flame className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />}
+            horizontal
+            infinite
+            endCard={<EventEndCard onViewAll={scrollToAllEvents} />}
+            className="mb-6 sm:mb-8"
+          >
+            {showPlaceholders || isLoading || trending.length === 0
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <EventCardCompactPlaceholder key={i} />
+                ))
+              : trending.map((event) => (
+                  <EventCardCompact key={event.id} event={event} />
+                ))}
+          </EventSection>
 
           {/* 📅 Próximos Eventos */}
-          {!isLoading && upcoming.length > 0 && (
-            <EventSection
-              title="Próximos Eventos"
-              subtitle="Acontecendo em breve"
-              icon={<CalendarClock className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />}
-              horizontal
-              infinite
-              endCard={<EventEndCard onViewAll={scrollToAllEvents} />}
-              className="mb-6 sm:mb-8"
-            >
-              {upcoming.map((event) => (
-                <EventCardCompact key={event.id} event={event} />
-              ))}
-            </EventSection>
-          )}
+          <EventSection
+            title="Próximos Eventos"
+            subtitle="Acontecendo em breve"
+            icon={<CalendarClock className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />}
+            horizontal
+            infinite
+            endCard={<EventEndCard onViewAll={scrollToAllEvents} />}
+            className="mb-6 sm:mb-8"
+          >
+            {showPlaceholders || isLoading || upcoming.length === 0
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <EventCardCompactPlaceholder key={i} />
+                ))
+              : upcoming.map((event) => (
+                  <EventCardCompact key={event.id} event={event} />
+                ))}
+          </EventSection>
 
           {/* ✨ Acabaram de Chegar */}
-          {!isLoading && recent.length > 0 && (
-            <EventSection
-              title="Acabaram de Chegar"
-              subtitle="Novos eventos para você explorar"
-              icon={<Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />}
-              horizontal
-              infinite
-              endCard={<EventEndCard onViewAll={scrollToAllEvents} />}
-              className="mb-6 sm:mb-8"
-            >
-              {recent.map((event) => (
-                <EventCardCompact key={event.id} event={event} showNew />
-              ))}
-            </EventSection>
-          )}
+          <EventSection
+            title="Acabaram de Chegar"
+            subtitle="Novos eventos para você explorar"
+            icon={<Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />}
+            horizontal
+            infinite
+            endCard={<EventEndCard onViewAll={scrollToAllEvents} />}
+            className="mb-6 sm:mb-8"
+          >
+            {showPlaceholders || isLoading || recent.length === 0
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <EventCardCompactPlaceholder key={i} />
+                ))
+              : recent.map((event) => (
+                  <EventCardCompact key={event.id} event={event} showNew />
+                ))}
+          </EventSection>
 
           {/* 📣 CTA Produtores */}
           <ProducerCTA />

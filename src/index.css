@@ -361,3 +361,15 @@
     max-height: 90dvh !important;
   }
 }
+
+.metallic-shine {
+  background: linear-gradient(120deg, #e0e0e0 0%, #f5f5f5 40%, #d1d1d1 60%, #f5f5f5 100%);
+  background-size: 200% 100%;
+  animation: metallicShine 1.2s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes metallicShine {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
