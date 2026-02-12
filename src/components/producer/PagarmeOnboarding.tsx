@@ -66,6 +66,29 @@ export function PagarmeOnboarding() {
   // Form state
   const [document, setDocument] = useState('');
   const [documentType, setDocumentType] = useState<'CPF' | 'CNPJ'>('CPF');
+  // PF fields
+  const [pfName, setPfName] = useState('');
+  const [pfEmail, setPfEmail] = useState('');
+  const [pfPhone, setPfPhone] = useState('');
+  const [pfBirthdate, setPfBirthdate] = useState('');
+  const [pfMonthlyIncome, setPfMonthlyIncome] = useState('');
+  const [pfOccupation, setPfOccupation] = useState('');
+  // PF address fields
+  const [pfStreet, setPfStreet] = useState('');
+  const [pfComplementary, setPfComplementary] = useState('');
+  const [pfStreetNumber, setPfStreetNumber] = useState('');
+  const [pfNeighborhood, setPfNeighborhood] = useState('');
+  const [pfCity, setPfCity] = useState('');
+  const [pfState, setPfState] = useState('');
+  const [pfZipCode, setPfZipCode] = useState('');
+  const [pfReferencePoint, setPfReferencePoint] = useState('');
+  // PJ fields
+  const [pjEmail, setPjEmail] = useState('');
+  const [pjPhone, setPjPhone] = useState('');
+  const [pjCompanyName, setPjCompanyName] = useState('');
+  const [pjTradingName, setPjTradingName] = useState('');
+  const [pjAnnualRevenue, setPjAnnualRevenue] = useState('');
+  // Bank fields
   const [bankCode, setBankCode] = useState('');
   const [branchNumber, setBranchNumber] = useState('');
   const [branchCheckDigit, setBranchCheckDigit] = useState('');
@@ -76,6 +99,7 @@ export function PagarmeOnboarding() {
   const fetchStatus = async () => {
     try {
       const data = await getRecipientStatus();
+      console.log(data)
       setStatus(data);
     } catch {
       // Pagar.me not configured on backend — hide the component
@@ -90,14 +114,23 @@ export function PagarmeOnboarding() {
   }, []);
 
   const handleCreateRecipient = async () => {
-    if (!document || !bankCode || !branchNumber || !accountNumber || !accountCheckDigit) {
-      toast({ title: 'Preencha todos os campos obrigatórios', variant: 'destructive' });
-      return;
+    // Validação básica dos campos obrigatórios
+    if (documentType === 'CPF') {
+      if (!pfName || !pfEmail || !pfPhone || !document || !pfBirthdate || !pfMonthlyIncome || !pfOccupation || !pfStreet || !pfComplementary || !pfStreetNumber || !pfNeighborhood || !pfCity || !pfState || !pfZipCode || !pfReferencePoint || !bankCode || !branchNumber || !accountNumber || !accountCheckDigit) {
+        toast({ title: 'Preencha todos os campos obrigatórios (PF)', variant: 'destructive' });
+        return;
+      }
+    } else {
+      if (!pjEmail || !pjPhone || !document || !pjCompanyName || !pjTradingName || !pjAnnualRevenue || !bankCode || !branchNumber || !accountNumber || !accountCheckDigit) {
+        toast({ title: 'Preencha todos os campos obrigatórios (PJ)', variant: 'destructive' });
+        return;
+      }
     }
 
     setActing(true);
     try {
-      const req: CreateRecipientRequest = {
+      // Monta o payload conforme o tipo
+      let req: any = {
         document: document.replace(/\D/g, ''),
         documentType,
         type: documentType === 'CNPJ' ? 'company' : 'individual',
@@ -108,6 +141,36 @@ export function PagarmeOnboarding() {
         accountCheckDigit: accountCheckDigit.replace(/\D/g, ''),
         accountType,
       };
+      if (documentType === 'CPF') {
+        req = {
+          ...req,
+          name: pfName,
+          email: pfEmail,
+          phone: pfPhone,
+          birthdate: pfBirthdate,
+          monthly_income: Number(pfMonthlyIncome),
+          professional_occupation: pfOccupation,
+          address: {
+            street: pfStreet,
+            complementary: pfComplementary,
+            street_number: pfStreetNumber,
+            neighborhood: pfNeighborhood,
+            city: pfCity,
+            state: pfState,
+            zip_code: pfZipCode,
+            reference_point: pfReferencePoint,
+          },
+        };
+      } else {
+        req = {
+          ...req,
+          email: pjEmail,
+          phone: pjPhone,
+          company_name: pjCompanyName,
+          trading_name: pjTradingName,
+          annual_revenue: Number(pjAnnualRevenue),
+        };
+      }
 
       await createRecipient(req);
       toast({
@@ -190,127 +253,216 @@ export function PagarmeOnboarding() {
 
       {showForm && (
         <div className="mt-6 space-y-4 p-4 rounded-xl bg-muted/50 border border-border">
-              <h4 className="font-medium text-sm">Dados bancários</h4>
-
-              {/* Document Type + Document */}
-              <div className="grid grid-cols-[140px_1fr] gap-3">
-                <div>
-                  <Label className="text-xs">Tipo</Label>
-                  <Select value={documentType} onValueChange={(v) => setDocumentType(v as 'CPF' | 'CNPJ')}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="CPF">CPF</SelectItem>
-                      <SelectItem value="CNPJ">CNPJ</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">{documentType}</Label>
-                  <Input
-                    placeholder={documentType === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
-                    value={document}
-                    onChange={(e) => setDocument(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Bank */}
-              <div>
-                <Label className="text-xs">Banco</Label>
-                <Select value={bankCode} onValueChange={setBankCode}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o banco" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BANKS.map((bank) => (
-                      <SelectItem key={bank.code} value={bank.code}>
-                        {bank.code} - {bank.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Branch */}
-              <div className="grid grid-cols-[1fr_80px] gap-3">
-                <div>
-                  <Label className="text-xs">Agência</Label>
-                  <Input
-                    placeholder="0001"
-                    value={branchNumber}
-                    onChange={(e) => setBranchNumber(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Dígito</Label>
-                  <Input
-                    placeholder="0"
-                    value={branchCheckDigit}
-                    onChange={(e) => setBranchCheckDigit(e.target.value)}
-                    maxLength={2}
-                  />
-                </div>
-              </div>
-
-              {/* Account */}
-              <div className="grid grid-cols-[1fr_80px] gap-3">
-                <div>
-                  <Label className="text-xs">Conta</Label>
-                  <Input
-                    placeholder="12345"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Dígito</Label>
-                  <Input
-                    placeholder="6"
-                    value={accountCheckDigit}
-                    onChange={(e) => setAccountCheckDigit(e.target.value)}
-                    maxLength={2}
-                  />
-                </div>
-              </div>
-
-              {/* Account Type */}
-              <div>
-                <Label className="text-xs">Tipo de conta</Label>
-                <Select value={accountType} onValueChange={(v) => setAccountType(v as 'checking' | 'savings')}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="checking">Conta Corrente</SelectItem>
-                    <SelectItem value="savings">Conta Poupança</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2 pt-2">
-                <Button onClick={handleCreateRecipient} disabled={acting}>
-                  {acting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Configurando...
-                    </>
-                  ) : (
-                    'Salvar e ativar'
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => setShowForm(false)}
-                  disabled={acting}
-                >
-                  Cancelar
-                </Button>
-              </div>
+          <h4 className="font-medium text-sm">Dados do recebedor</h4>
+          {/* Tipo de pessoa e documento */}
+          <div className="grid grid-cols-[140px_1fr] gap-3">
+            <div>
+              <Label className="text-xs">Tipo</Label>
+              <Select value={documentType} onValueChange={(v) => setDocumentType(v as 'CPF' | 'CNPJ')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CPF">Pessoa Física</SelectItem>
+                  <SelectItem value="CNPJ">Pessoa Jurídica</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+            <div>
+              <Label className="text-xs">{documentType}</Label>
+              <Input
+                placeholder={documentType === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
+                value={document}
+                onChange={(e) => setDocument(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Campos PF */}
+          {documentType === 'CPF' && (
+            <>
+              <div>
+                <Label className="text-xs">Nome completo</Label>
+                <Input value={pfName} onChange={e => setPfName(e.target.value)} placeholder="Nome completo" />
+              </div>
+              <div>
+                <Label className="text-xs">E-mail</Label>
+                <Input value={pfEmail} onChange={e => setPfEmail(e.target.value)} placeholder="email@exemplo.com" />
+              </div>
+              <div>
+                <Label className="text-xs">Telefone</Label>
+                <Input value={pfPhone} onChange={e => setPfPhone(e.target.value)} placeholder="(99) 99999-9999" />
+              </div>
+              <div>
+                <Label className="text-xs">Data de nascimento</Label>
+                <Input value={pfBirthdate} onChange={e => setPfBirthdate(e.target.value)} placeholder="AAAA-MM-DD" type="date" />
+              </div>
+              <div>
+                <Label className="text-xs">Renda mensal (R$)</Label>
+                <Input value={pfMonthlyIncome} onChange={e => setPfMonthlyIncome(e.target.value)} placeholder="Ex: 5000" type="number" />
+              </div>
+              <div>
+                <Label className="text-xs">Ocupação profissional</Label>
+                <Input value={pfOccupation} onChange={e => setPfOccupation(e.target.value)} placeholder="Ocupação" />
+              </div>
+              <div className="pt-2">
+                <h5 className="font-medium text-xs mb-2">Endereço</h5>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-xs">Rua</Label>
+                    <Input value={pfStreet} onChange={e => setPfStreet(e.target.value)} placeholder="Rua" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Complemento</Label>
+                    <Input value={pfComplementary} onChange={e => setPfComplementary(e.target.value)} placeholder="Apto, bloco, etc." />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Número</Label>
+                    <Input value={pfStreetNumber} onChange={e => setPfStreetNumber(e.target.value)} placeholder="Número" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Bairro</Label>
+                    <Input value={pfNeighborhood} onChange={e => setPfNeighborhood(e.target.value)} placeholder="Bairro" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Cidade</Label>
+                    <Input value={pfCity} onChange={e => setPfCity(e.target.value)} placeholder="Cidade" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Estado</Label>
+                    <Input value={pfState} onChange={e => setPfState(e.target.value)} placeholder="Estado" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">CEP</Label>
+                    <Input value={pfZipCode} onChange={e => setPfZipCode(e.target.value)} placeholder="00000000" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Ponto de referência</Label>
+                    <Input value={pfReferencePoint} onChange={e => setPfReferencePoint(e.target.value)} placeholder="Referência" />
+                  </div>
+                </div>
+              </div>
+            </>
           )}
+
+          {/* Campos PJ */}
+          {documentType === 'CNPJ' && (
+            <>
+              <div>
+                <Label className="text-xs">E-mail</Label>
+                <Input value={pjEmail} onChange={e => setPjEmail(e.target.value)} placeholder="email@empresa.com" />
+              </div>
+              <div>
+                <Label className="text-xs">Telefone</Label>
+                <Input value={pjPhone} onChange={e => setPjPhone(e.target.value)} placeholder="(99) 99999-9999" />
+              </div>
+              <div>
+                <Label className="text-xs">Nome fantasia</Label>
+                <Input value={pjCompanyName} onChange={e => setPjCompanyName(e.target.value)} placeholder="Nome fantasia" />
+              </div>
+              <div>
+                <Label className="text-xs">Razão social</Label>
+                <Input value={pjTradingName} onChange={e => setPjTradingName(e.target.value)} placeholder="Razão social" />
+              </div>
+              <div>
+                <Label className="text-xs">Receita anual (R$)</Label>
+                <Input value={pjAnnualRevenue} onChange={e => setPjAnnualRevenue(e.target.value)} placeholder="Ex: 100000" type="number" />
+              </div>
+            </>
+          )}
+
+          <h4 className="font-medium text-sm pt-2">Dados bancários</h4>
+          {/* Bank */}
+          <div>
+            <Label className="text-xs">Banco</Label>
+            <Select value={bankCode} onValueChange={setBankCode}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o banco" />
+              </SelectTrigger>
+              <SelectContent>
+                {BANKS.map((bank) => (
+                  <SelectItem key={bank.code} value={bank.code}>
+                    {bank.code} - {bank.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Branch */}
+          <div className="grid grid-cols-[1fr_80px] gap-3">
+            <div>
+              <Label className="text-xs">Agência</Label>
+              <Input
+                placeholder="0001"
+                value={branchNumber}
+                onChange={(e) => setBranchNumber(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Dígito</Label>
+              <Input
+                placeholder="0"
+                value={branchCheckDigit}
+                onChange={(e) => setBranchCheckDigit(e.target.value)}
+                maxLength={2}
+              />
+            </div>
+          </div>
+          {/* Account */}
+          <div className="grid grid-cols-[1fr_80px] gap-3">
+            <div>
+              <Label className="text-xs">Conta</Label>
+              <Input
+                placeholder="12345"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Dígito</Label>
+              <Input
+                placeholder="6"
+                value={accountCheckDigit}
+                onChange={(e) => setAccountCheckDigit(e.target.value)}
+                maxLength={2}
+              />
+            </div>
+          </div>
+          {/* Account Type */}
+          <div>
+            <Label className="text-xs">Tipo de conta</Label>
+            <Select value={accountType} onValueChange={(v) => setAccountType(v as 'checking' | 'savings')}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="checking">Conta Corrente</SelectItem>
+                <SelectItem value="savings">Conta Poupança</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Actions */}
+          <div className="flex gap-2 pt-2">
+            <Button onClick={handleCreateRecipient} disabled={acting}>
+              {acting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  Configurando...
+                </>
+              ) : (
+                'Salvar e ativar'
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setShowForm(false)}
+              disabled={acting}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
