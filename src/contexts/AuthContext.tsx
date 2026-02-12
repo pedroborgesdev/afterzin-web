@@ -87,6 +87,22 @@ function mapApiTicket(t: {
   };
 }
 
+/**
+ * Remove todos os caracteres não numéricos de um CPF.
+ * Exemplo: "123.456.789-00" → "12345678900"
+ */
+function sanitizeCPF(cpf: string): string {
+  return cpf.replace(/\D/g, '');
+}
+
+/**
+ * Valida se um CPF possui exatamente 11 dígitos numéricos.
+ */
+function validateCPF(cpf: string): boolean {
+  const cleaned = sanitizeCPF(cpf);
+  return cleaned.length === 11 && /^\d{11}$/.test(cleaned);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -154,13 +170,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (data: Omit<User, 'id'> & { password: string }): Promise<{ success: boolean; error?: string }> => {
+    // Sanitizar e validar CPF antes de enviar
+    const sanitizedCPF = sanitizeCPF(data.cpf);
+
+    if (!validateCPF(sanitizedCPF)) {
+      return { success: false, error: 'CPF inválido: deve conter 11 dígitos.' };
+    }
+
     try {
       const res = await graphqlClient.request<{ register: { token: string; user: unknown } }>(MUTATION_REGISTER, {
         input: {
           name: data.name,
           email: data.email,
           password: data.password,
-          cpf: data.cpf,
+          cpf: sanitizedCPF, // Enviar CPF limpo (sem formatação)
           birthDate: data.birthDate,
         },
       });

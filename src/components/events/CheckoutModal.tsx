@@ -30,6 +30,12 @@ interface CheckoutModalProps {
   onSuccess: () => void;
 }
 
+/**
+ * Método de pagamento único permitido na plataforma.
+ * A aplicação aceita EXCLUSIVAMENTE pagamento via PIX.
+ */
+const PAYMENT_METHOD = 'pix' as const;
+
 export function CheckoutModal({
   event,
   selection,
@@ -99,16 +105,40 @@ export function CheckoutModal({
     }
   };
 
-  // Start PIX payment flow
+  /**
+   * Inicia o fluxo de pagamento via PIX (único método permitido).
+   *
+   * Validações realizadas:
+   * - checkoutId não pode estar vazio
+   * - Resposta do servidor deve conter QR code válido
+   *
+   * Fluxo:
+   * 1. Cria pagamento PIX no backend
+   * 2. Exibe QR code para o usuário
+   * 3. Inicia polling para detectar confirmação de pagamento
+   */
   const handlePay = async () => {
-    if (!checkoutId) {
-      toast({ title: 'Erro', description: 'Checkout não disponível.', variant: 'destructive' });
+    // Validar checkoutId
+    if (!checkoutId || checkoutId.trim() === '') {
+      toast({
+        title: 'Erro',
+        description: 'ID do checkout inválido.',
+        variant: 'destructive'
+      });
       return;
     }
+
     setPaymentStatus('loading');
 
     try {
+      // Criar pagamento PIX (único método permitido)
       const result = await createPixPayment(checkoutId);
+
+      // Validar resposta do servidor
+      if (!result.pixQrCode || !result.pixQrCodeUrl) {
+        throw new Error('Resposta do servidor inválida: QR Code não recebido');
+      }
+
       setPixData(result);
       setPaymentStatus('pix');
 
@@ -132,6 +162,7 @@ export function CheckoutModal({
         }
       }, 3000);
     } catch (err) {
+      console.error('[Checkout] Erro ao criar pagamento PIX:', err);
       setPaymentStatus('error');
       toast({
         title: 'Erro ao gerar PIX',
