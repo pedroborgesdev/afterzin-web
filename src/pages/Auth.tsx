@@ -58,6 +58,40 @@ export default function Auth() {
     return `${year}-${month}-${day}`;
   };
 
+  const isValidCPF = (value: string) => {
+    const cpf = value.replace(/\D/g, '');
+    if (cpf.length !== 11) return false;
+    if (/^(\d)\1+$/.test(cpf)) return false;
+    const toInt = (c: string) => parseInt(c, 10);
+    let sum = 0;
+    for (let i = 0; i < 9; i++) sum += toInt(cpf[i]) * (10 - i);
+    let r = sum % 11;
+    const d1 = r < 2 ? 0 : 11 - r;
+    if (d1 !== toInt(cpf[9])) return false;
+    sum = 0;
+    for (let i = 0; i < 10; i++) sum += toInt(cpf[i]) * (11 - i);
+    r = sum % 11;
+    const d2 = r < 2 ? 0 : 11 - r;
+    return d2 === toInt(cpf[10]);
+  };
+
+  const isAtLeastAge = (dateStr: string, minAge: number) => {
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return false;
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) return false;
+    const bd = new Date(year, month, day);
+    if (isNaN(bd.getTime())) return false;
+    const now = new Date();
+    let age = now.getFullYear() - bd.getFullYear();
+    if (now.getMonth() < bd.getMonth() || (now.getMonth() === bd.getMonth() && now.getDate() < bd.getDate())) {
+      age--;
+    }
+    return age >= minAge;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -79,10 +113,23 @@ export default function Auth() {
           });
         }
       } else {
+        // Frontend validations: CPF and birth date (>=16)
+        const cpfNumbers = cpf.replace(/\D/g, '');
+        if (!isValidCPF(cpfNumbers)) {
+          toast({ title: 'CPF inválido', description: 'Verifique o CPF informado.', variant: 'destructive' });
+          setIsLoading(false);
+          return;
+        }
+        if (!isAtLeastAge(birthDate, 16)) {
+          toast({ title: 'Idade inválida', description: 'Você precisa ter 16 anos ou mais para se cadastrar.', variant: 'destructive' });
+          setIsLoading(false);
+          return;
+        }
+
         const result = await register({
           name,
           email,
-          cpf,
+          cpf: cpfNumbers,
           birthDate: formatBirthDateForBackend(birthDate),
           password,
           phoneCountryCode,

@@ -5,7 +5,7 @@
  * (webhooks, PIX flow) are naturally REST-based.
  */
 
-const API_URL = 'https://api.afterzin.com/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.afterzin.com/v1';
 
 async function fetchWithAuth(path: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
