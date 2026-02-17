@@ -60,6 +60,9 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
   };
 
   const currentEvent = events[currentIndex];
+  const currentFirstDate = currentEvent && currentEvent.dates && currentEvent.dates.length > 0 && currentEvent.dates[0]?.date
+    ? currentEvent.dates[0].date
+    : null;
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -118,7 +121,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-primary-foreground/70 text-sm mb-5 sm:mb-6">
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
-                <span>{formatDate(currentEvent.dates[0].date)}</span>
+                <span>{currentFirstDate ? formatDate(currentFirstDate) : 'Data a definir'}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-4 h-4" />

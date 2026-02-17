@@ -16,11 +16,15 @@ export function EventCard({ event }: EventCardProps) {
 
   const getLowestPrice = () => {
     let lowest = Infinity;
-    event.currentLot.tickets.forEach((ticket) => {
-      ticket.variants.forEach((v) => {
-        if (v.price < lowest) lowest = v.price;
+    if (event.currentLot && Array.isArray(event.currentLot.tickets)) {
+      event.currentLot.tickets.forEach((ticket) => {
+        if (ticket && Array.isArray(ticket.variants)) {
+          ticket.variants.forEach((v) => {
+            if (v && typeof v.price === 'number' && v.price < lowest) lowest = v.price;
+          });
+        }
       });
-    });
+    }
     return lowest === Infinity ? 0 : lowest;
   };
 
@@ -67,8 +71,10 @@ export function EventCard({ event }: EventCardProps) {
             <div className="flex items-center gap-1">
               <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
               <span>
-                {formatDate(event.dates[0].date)}
-                {event.dates.length > 1 && ` +${event.dates.length - 1}`}
+                {event.dates && event.dates.length > 0 && event.dates[0]?.date
+                  ? formatDate(event.dates[0].date)
+                  : 'Data a definir'}
+                {event.dates && event.dates.length > 1 && ` +${event.dates.length - 1}`}
               </span>
             </div>
             <div className="flex items-center gap-1 min-w-0">
