@@ -118,7 +118,7 @@ export function Header({ searchQuery = '', onSearchChange, onSearchSubmit }: Hea
           <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-shadow duration-200">
             <img
               src="/logo.svg"
-              alt="Afterzin Logo"
+                    alt=""
               className="w-9 h-9 md:w-9 md:h-9 object-contain brightness-0 invert"
               draggable="false"
             />
@@ -216,7 +216,7 @@ export function Header({ searchQuery = '', onSearchChange, onSearchSubmit }: Hea
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-full p-1 pr-2 md:pr-3 hover:bg-white/10 transition-colors focus-ring text-white">
                   <Avatar className="h-8 w-8 border-2 border-white/30">
-                    <AvatarImage src={user?.avatar} alt={user?.name} />
+                    <AvatarImage src={user?.avatar} alt="" />
                     <AvatarFallback className="bg-white/20 text-white text-sm font-medium">
                       {user?.name?.charAt(0)}
                     </AvatarFallback>

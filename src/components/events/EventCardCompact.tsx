@@ -42,7 +42,7 @@ export function EventCardCompact({ event, showNew = false }: EventCardCompactPro
         <div className="relative aspect-[3/2] overflow-hidden">
           <img
             src={event.coverImage}
-            alt={event.name}
+            alt=""
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />

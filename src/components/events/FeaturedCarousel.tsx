@@ -92,7 +92,7 @@ export function FeaturedCarousel({ events }: FeaturedCarouselProps) {
         >
           <img
             src={event.coverImage}
-            alt={event.name}
+            alt=""
             className="w-full h-full object-cover"
             loading={index === 0 ? "eager" : "lazy"}
           />

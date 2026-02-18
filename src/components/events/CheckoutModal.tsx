@@ -202,7 +202,7 @@ export function CheckoutModal({
             {pixData.pixQrCodeUrl ? (
               <img
                 src={pixData.pixQrCodeUrl}
-                alt="QR Code PIX"
+                alt=""
                 className="w-48 h-48 sm:w-56 sm:h-56 rounded-lg border border-border"
               />
             ) : (
@@ -224,9 +224,9 @@ export function CheckoutModal({
               <p className="text-sm text-muted-foreground mb-2 text-center">PIX Copia e Cola</p>
               <button
                 onClick={handleCopyCode}
-                className="w-full flex items-center gap-2 px-4 py-3 bg-muted rounded-xl text-sm hover:bg-accent transition-colors min-h-touch touch-manipulation active:scale-[0.99]"
+                className="w-full flex items-center gap-2 px-4 py-3 bg-muted rounded-xl text-sm hover:bg-accent transition-colors min-h-touch touch-manipulation active:scale-[0.99] overflow-hidden min-w-0"
               >
-                <span className="font-mono truncate flex-1 text-left text-xs">
+                <span className="font-mono truncate flex-1 text-left text-xs whitespace-nowrap">
                   {pixData.pixQrCode}
                 </span>
                 {copied ? (

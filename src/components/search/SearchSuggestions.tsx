@@ -75,7 +75,7 @@ export function SearchSuggestions({
                 <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-muted">
                   <img
                     src={event.coverImage}
-                    alt={event.name}
+                    alt=""
                     className="w-full h-full object-cover"
                   />
                 </div>

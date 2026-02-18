@@ -1,4 +1,5 @@
 import { Calendar, MapPin, ExternalLink } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 
 interface TicketCardProps {
@@ -31,7 +32,7 @@ export function TicketCard({ ticket, onOpen }: TicketCardProps) {
       <div className="relative h-28 sm:h-32 overflow-hidden">
         <img 
           src={ticket.eventImage} 
-          alt={ticket.eventName}
+          alt=""
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
         />
@@ -56,11 +57,32 @@ export function TicketCard({ ticket, onOpen }: TicketCardProps) {
             <span className="truncate">{ticket.location}</span>
           </div>
         </div>
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-card p-2 rounded-lg shadow-soft border border-border flex items-center justify-center">
+              {ticket.qrCode ? (
+                <QRCodeSVG
+                  value={ticket.qrCode}
+                  size={96}
+                  bgColor="transparent"
+                  fgColor="currentColor"
+                  level="M"
+                  includeMargin={false}
+                  className="text-foreground"
+                />
+              ) : (
+                <span className="text-xs text-muted-foreground">QR indisponível</span>
+              )}
+            </div>
+          </div>
 
-        <Button onClick={onOpen} className="w-full" size="sm">
-          <ExternalLink className="w-4 h-4" />
-          Abrir Ticket
-        </Button>
+          <div className="flex-1">
+            <Button onClick={onOpen} className="w-full" size="sm">
+              <ExternalLink className="w-4 h-4" />
+              Abrir Ticket
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

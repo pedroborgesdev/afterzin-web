@@ -172,7 +172,7 @@ export default function Auth() {
               <div className="flex items-center gap-2.5">
                 <img
                   src="/logo.svg"
-                  alt="Afterzin Logo"
+                    alt=""
                   className="w-9 h-9 object-contain"
                   draggable="false"
                 />
@@ -426,14 +426,14 @@ export default function Auth() {
         <div className="relative h-full w-full max-w-[50vw] xl:max-w-[50vw] overflow-hidden rounded-3xl">
           <img
             src="/cta.png"
-            alt="Pessoas se divertindo em um show"
+            alt=""
             className="h-full w-full object-cover blur-sm scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/55 to-primary/75" />
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-8 p-12">
             <img
               src="/logo.svg"
-              alt="Afterzin Logo"
+              alt=""
               className="w-36 h-36 xl:w-48 xl:h-48 object-contain brightness-0 invert drop-shadow-2xl"
               draggable="false"
             />

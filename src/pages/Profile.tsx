@@ -113,7 +113,7 @@ export default function Profile() {
               <div className="absolute -bottom-10 sm:-bottom-12 left-1/2 -translate-x-1/2">
                 <div className="relative">
                   <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-card shadow-lg">
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarImage src={user.avatar} alt="" />
                     <AvatarFallback className="bg-primary text-primary-foreground text-xl sm:text-2xl font-bold">
                       {user.name?.charAt(0)}
                     </AvatarFallback>

@@ -139,7 +139,7 @@ export default function EventDetail() {
   return (
     <Layout>
       <div className="relative h-[280px] sm:h-[350px] md:h-[400px] overflow-hidden">
-        <img src={event.coverImage} alt={event.name} className="w-full h-full object-cover" />
+        <img src={event.coverImage} alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <button
           onClick={() => navigate(-1)}
@@ -188,7 +188,7 @@ export default function EventDetail() {
                     className="flex items-center gap-3 p-3 sm:p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
                   >
                     <Avatar className="h-12 w-12 sm:h-14 sm:w-14 border-2 border-primary/20">
-                      <AvatarImage src={event.producer.photoUrl ?? undefined} alt={event.producer.name} />
+                      <AvatarImage src={event.producer.photoUrl ?? undefined} alt="" />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         <User className="w-6 h-6 sm:w-7 sm:h-7" />
                       </AvatarFallback>

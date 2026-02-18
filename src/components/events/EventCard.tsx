@@ -35,7 +35,7 @@ export function EventCard({ event }: EventCardProps) {
         <div className="aspect-[4/3] overflow-hidden">
           <img 
             src={event.coverImage} 
-            alt={event.name}
+            alt=""
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />

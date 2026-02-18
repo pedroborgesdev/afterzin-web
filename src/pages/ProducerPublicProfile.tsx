@@ -94,7 +94,7 @@ export default function ProducerPublicProfile() {
       <div className="container py-6 sm:py-10">
         <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-8 p-4 sm:p-6 rounded-2xl border border-border bg-card">
           <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-2 border-primary/20">
-            <AvatarImage src={photoUrl} alt={userName} />
+            <AvatarImage src={photoUrl} alt="" />
             <AvatarFallback className="bg-primary/10 text-primary text-2xl">
               <User className="w-10 h-10 sm:w-12 sm:h-12" />
             </AvatarFallback>
@@ -135,7 +135,7 @@ export default function ProducerPublicProfile() {
                     {event.coverImage ? (
                       <img
                         src={event.coverImage}
-                        alt={event.name}
+                        alt=""
                         className="w-full h-full object-cover"
                       />
                     ) : (
